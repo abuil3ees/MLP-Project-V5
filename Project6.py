@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Custom CSS for green radio buttons and sliders
+# Custom CSS for forcing green color for radio buttons and sliders
 st.markdown("""
     <style>
         /* Force green on selected radio button dot */
@@ -13,19 +13,21 @@ st.markdown("""
             color: black !important;
             background-color: transparent !important;
         }
-        /* Custom slider styles for WebKit browsers */
+        /* Force green slider thumb and track for WebKit browsers */
         div[data-baseweb="slider"] input[type="range"]::-webkit-slider-thumb {
-            background: #008000 !important;
+            background-color: #008000 !important;
+            border: none !important;
         }
         div[data-baseweb="slider"] input[type="range"]::-webkit-slider-runnable-track {
-            background: #008000 !important;
+            background-color: #008000 !important;
         }
-        /* Custom slider styles for Firefox */
+        /* Force green slider thumb and track for Firefox */
         div[data-baseweb="slider"] input[type="range"]::-moz-range-thumb {
-            background: #008000 !important;
+            background-color: #008000 !important;
+            border: none !important;
         }
         div[data-baseweb="slider"] input[type="range"]::-moz-range-track {
-            background: #008000 !important;
+            background-color: #008000 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -37,7 +39,7 @@ st.image("logo.png", width=400)
 st.title("Leadership Readiness Tool")
 
 # Add the text box in the sidebar so it always remains visible
-summary = st.sidebar.text_area("Case study/Problem statement:", 
+summary = st.sidebar.text_area("Case study/Problem statement:",
                                placeholder="Write your case study or problem statement here...")
 
 # Define behaviors and their 5 questions each
