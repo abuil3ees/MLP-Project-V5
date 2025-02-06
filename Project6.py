@@ -1,17 +1,31 @@
 import streamlit as st
 
-# Apply custom CSS for green radio button selection dots
+# Custom CSS for green radio buttons and sliders
 st.markdown("""
     <style>
         /* Force green on selected radio button dot */
         div[role="radiogroup"] > div > div[data-baseweb="radio"] input:checked + div {
-            background-color: #008000 !important; /* Green selection circle */
-            border-color: #008000 !important; /* Green border for the dot */
+            background-color: #008000 !important;
+            border-color: #008000 !important;
         }
         /* Ensure radio button text remains black */
         div[role="radiogroup"] > div > div[data-baseweb="radio"] label {
-            color: black !important; /* Keep text black */
-            background-color: transparent !important; /* No background on text */
+            color: black !important;
+            background-color: transparent !important;
+        }
+        /* Custom slider styles for WebKit browsers */
+        div[data-baseweb="slider"] input[type="range"]::-webkit-slider-thumb {
+            background: #008000 !important;
+        }
+        div[data-baseweb="slider"] input[type="range"]::-webkit-slider-runnable-track {
+            background: #008000 !important;
+        }
+        /* Custom slider styles for Firefox */
+        div[data-baseweb="slider"] input[type="range"]::-moz-range-thumb {
+            background: #008000 !important;
+        }
+        div[data-baseweb="slider"] input[type="range"]::-moz-range-track {
+            background: #008000 !important;
         }
     </style>
 """, unsafe_allow_html=True)
