@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
 
 # Apply custom CSS for green radio button selection dots
 st.markdown("""
@@ -10,23 +8,23 @@ st.markdown("""
             background-color: #008000 !important; /* Green selection circle */
             border-color: #008000 !important; /* Green border for the dot */
         }
-
         /* Ensure radio button text remains black */
         div[role="radiogroup"] > div > div[data-baseweb="radio"] label {
-            color: black !important;
-            background-color: transparent !important;
+            color: black !important; /* Keep text black */
+            background-color: transparent !important; /* No background on text */
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Display the logo at the top
+# Display the logo at the top of the main page
 st.image("logo.png", width=400)
 
 # Title of the app
 st.title("Leadership Readiness Tool")
 
-# Add a text box for summary input at the top
-summary = st.text_area("Case study/Problem statement:", placeholder="Write your case study or problem statement here...")
+# Add the text box in the sidebar so it always remains visible
+summary = st.sidebar.text_area("Case study/Problem statement:", 
+                               placeholder="Write your case study or problem statement here...")
 
 # Define behaviors and their 5 questions each
 behaviors = {
@@ -88,10 +86,8 @@ behaviors = {
     ]
 }
 
-# Dictionary to store responses
 responses = {}
 
-# Display the questions
 for behavior, questions in behaviors.items():
     st.subheader(behavior)
     for i, q in enumerate(questions):
@@ -100,22 +96,18 @@ for behavior, questions in behaviors.items():
         elif q["type"] == "Scale":
             responses[f"{behavior}_{i}"] = st.slider(q["question"], min_value=1, max_value=10, value=5)
 
-# Add a Submit button
 if st.button("Submit"):
     total_score = 0
     max_score = len(responses) * 10
 
-    # Calculate the total score
     for key, value in responses.items():
-        if isinstance(value, str):  # Yes/No questions
+        if isinstance(value, str):
             total_score += 10 if value == "Yes" else 0
-        elif isinstance(value, int):  # Scale questions
+        elif isinstance(value, int):
             total_score += value
 
-    # Calculate readiness score
     readiness_score = (total_score / max_score) * 100
 
-    # Determine traffic light status and image
     if readiness_score >= 80:
         status = "Green - Ready to Proceed"
         image_path = "green_light.png"
@@ -126,33 +118,7 @@ if st.button("Submit"):
         status = "Red - Do Not Proceed"
         image_path = "red_light.png"
 
-    # Display results in a pop-up style expander
     with st.expander("View Results", expanded=True):
         st.image(image_path, width=150)
         st.markdown(f"### Final Readiness Score: {readiness_score:.2f}%")
         st.markdown(f"### Status: **{status}**")
-
-    # Save responses to Excel
-    save_data = {
-        "Timestamp": [datetime.now()],
-        "Summary": [summary],
-        **{key: [value] for key, value in responses.items()},
-        "Readiness Score": [readiness_score],
-        "Status": [status]
-    }
-    df = pd.DataFrame(save_data)
-
-    # File path
-    file_name = "Leadership_Readiness_Responses.xlsx"
-
-    try:
-        # Append to existing file if it exists
-        existing_df = pd.read_excel(file_name)
-        df = pd.concat([existing_df, df], ignore_index=True)
-    except FileNotFoundError:
-        pass  # File doesn't exist yet
-
-    # Save to Excel
-    df.to_excel(file_name, index=False)
-
-    st.success(f"Responses have been saved to {file_name}.")
