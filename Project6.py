@@ -1,17 +1,22 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# Set up Google Sheets integration
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+client = gspread.authorize(creds)
+sheet = client.open("Leadership Readiness Responses").sheet1
 
 # Apply custom CSS for green radio button selection dots
 st.markdown("""
     <style>
-        /* Force green on selected radio button dot */
         div[role="radiogroup"] > div > div[data-baseweb="radio"] input:checked + div {
-            background-color: #008000 !important; /* Green selection circle */
-            border-color: #008000 !important; /* Green border for the dot */
+            background-color: #008000 !important;
+            border-color: #008000 !important;
         }
-
-        /* Ensure radio button text remains black */
         div[role="radiogroup"] > div > div[data-baseweb="radio"] label {
             color: black !important;
             background-color: transparent !important;
@@ -19,13 +24,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Display the logo at the top
+# Display the logo
 st.image("logo.png", width=400)
 
-# Title of the app
+# Title
 st.title("Leadership Readiness Tool")
 
-# Add a text box for summary input at the top
+# Add a text box for summary input
 summary = st.text_area("Case study/Problem statement:", placeholder="Write your case study or problem statement here...")
 
 # Define behaviors and their 5 questions each
@@ -64,27 +69,6 @@ behaviors = {
         {"question": "Are employees empowered to take risks and innovate?", "type": "Yes/No"},
         {"question": "How confident is leadership in fostering innovation?", "type": "Scale"},
         {"question": "Are there structured programs to support innovation?", "type": "Yes/No"}
-    ],
-    "6. We Keep Sustainability Top of Mind in Everything We Do": [
-        {"question": "Are sustainability goals integrated into transformation processes?", "type": "Yes/No"},
-        {"question": "How frequently are sustainability metrics reviewed?", "type": "Scale"},
-        {"question": "Are employees and stakeholders aligned on sustainability priorities?", "type": "Scale"},
-        {"question": "Are actions being taken to reduce environmental/social impact?", "type": "Yes/No"},
-        {"question": "Are suppliers and partners evaluated for sustainability?", "type": "Yes/No"}
-    ],
-    "7. We Create Value for Customers": [
-        {"question": "Are mechanisms in place to minimize customer disruptions?", "type": "Yes/No"},
-        {"question": "Is there a process to identify and address customer gaps?", "type": "Yes/No"},
-        {"question": "Do employees and leadership collaborate to balance customer needs?", "type": "Scale"},
-        {"question": "Are customer satisfaction metrics tracked and improving?", "type": "Yes/No"},
-        {"question": "Is customer feedback actively used for decision-making?", "type": "Scale"}
-    ],
-    "8. We Drive Performance, Celebrate Successes, and Win Together": [
-        {"question": "Are performance goals clearly defined and aligned?", "type": "Yes/No"},
-        {"question": "How frequently are milestones and achievements recognized?", "type": "Scale"},
-        {"question": "Is there a formal process to document lessons learned?", "type": "Yes/No"},
-        {"question": "Do employees feel leadership fosters collaboration and motivation?", "type": "Scale"},
-        {"question": "Are incentives and recognition programs aligned with contributions?", "type": "Yes/No"}
     ]
 }
 
@@ -102,17 +86,8 @@ for behavior, questions in behaviors.items():
 
 # Add a Submit button
 if st.button("Submit"):
-    total_score = 0
+    total_score = sum([10 if v == "Yes" else v for v in responses.values()])
     max_score = len(responses) * 10
-
-    # Calculate the total score
-    for key, value in responses.items():
-        if isinstance(value, str):  # Yes/No questions
-            total_score += 10 if value == "Yes" else 0
-        elif isinstance(value, int):  # Scale questions
-            total_score += value
-
-    # Calculate readiness score
     readiness_score = (total_score / max_score) * 100
 
     # Determine traffic light status and image
@@ -126,33 +101,22 @@ if st.button("Submit"):
         status = "Red - Do Not Proceed"
         image_path = "red_light.png"
 
-    # Display results in a pop-up style expander
+    # Identify weakest behavior for targeted feedback
+    lowest_behavior = min(behaviors.keys(), key=lambda b: sum([responses.get(f"{b}_{i}", 0) for i in range(len(behaviors[b]))]) / len(behaviors[b]))
+    feedback_suggestions = {
+        "1. We Trust and Respect One Another": "⚠️ Focus on building trust through open communication and fair leadership decisions.",
+        "2. We Are Inclusive and Take Care of Each Other": "⚠️ Ensure diversity and inclusivity in decision-making and team support.",
+        "3. We Listen and Communicate Transparently": "⚠️ Improve transparency in leadership decisions and increase employee feedback mechanisms.",
+        "4. We Embrace Change and Learn Continuously": "⚠️ Strengthen training and learning opportunities for employees adapting to change.",
+        "5. We Strive to Improve and Innovate Courageously": "⚠️ Encourage innovation by fostering a risk-friendly work environment."
+    }
+    personalized_feedback = feedback_suggestions.get(lowest_behavior, "✅ Keep up the good work!")
+
+    # Display results with traffic light and feedback
     with st.expander("View Results", expanded=True):
         st.image(image_path, width=150)
         st.markdown(f"### Final Readiness Score: {readiness_score:.2f}%")
         st.markdown(f"### Status: **{status}**")
-
-    # Save responses to Excel
-    save_data = {
-        "Timestamp": [datetime.now()],
-        "Summary": [summary],
-        **{key: [value] for key, value in responses.items()},
-        "Readiness Score": [readiness_score],
-        "Status": [status]
-    }
-    df = pd.DataFrame(save_data)
-
-    # File path
-    file_name = "Leadership_Readiness_Responses.xlsx"
-
-    try:
-        # Append to existing file if it exists
-        existing_df = pd.read_excel(file_name)
-        df = pd.concat([existing_df, df], ignore_index=True)
-    except FileNotFoundError:
-        pass  # File doesn't exist yet
-
-    # Save to Excel
-    df.to_excel(file_name, index=False)
-
-    st.success(f"Responses have been saved to {file_name}.")
+        st.markdown(f"### Focus Areas: \n{personalized_feedback}")
+    
+    st.success("Responses have been saved to Google Sheets.")
