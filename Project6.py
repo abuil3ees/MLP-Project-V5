@@ -1,48 +1,50 @@
 import streamlit as st
 
-# Custom CSS for forcing green color for radio buttons and sliders
 st.markdown("""
     <style>
-        /* Force green on selected radio button dot */
-        div[role="radiogroup"] > div > div[data-baseweb="radio"] input:checked + div {
+        /* Force green for selected radio button */
+        div[data-baseweb="radio"] input:checked + div {
             background-color: #008000 !important;
             border-color: #008000 !important;
         }
-        /* Ensure radio button text remains black */
-        div[role="radiogroup"] > div > div[data-baseweb="radio"] label {
+        div[data-baseweb="radio"] label {
             color: black !important;
-            background-color: transparent !important;
         }
-        /* Force green slider thumb and track for WebKit browsers */
+
+        /* Force green for slider thumb and track (WebKit) */
         div[data-baseweb="slider"] input[type="range"]::-webkit-slider-thumb {
-            background-color: #008000 !important;
-            border: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #008000 !important;
         }
         div[data-baseweb="slider"] input[type="range"]::-webkit-slider-runnable-track {
-            background-color: #008000 !important;
+            background: #008000 !important;
         }
-        /* Force green slider thumb and track for Firefox */
+        
+        /* Force green for slider thumb and track (Firefox) */
         div[data-baseweb="slider"] input[type="range"]::-moz-range-thumb {
-            background-color: #008000 !important;
-            border: none !important;
+            background: #008000 !important;
         }
         div[data-baseweb="slider"] input[type="range"]::-moz-range-track {
-            background-color: #008000 !important;
+            background: #008000 !important;
+        }
+        
+        /* Additional selectors in case BaseWeb uses different classes */
+        div[data-baseweb="slider"] .Slider__thumb {
+            background: #008000 !important;
+        }
+        div[data-baseweb="slider"] .Slider__track {
+            background: #008000 !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Display the logo at the top of the main page
 st.image("logo.png", width=400)
-
-# Title of the app
 st.title("Leadership Readiness Tool")
 
-# Add the text box in the sidebar so it always remains visible
 summary = st.sidebar.text_area("Case study/Problem statement:",
                                placeholder="Write your case study or problem statement here...")
 
-# Define behaviors and their 5 questions each
 behaviors = {
     "1. We Trust and Respect One Another": [
         {"question": "Do team members demonstrate mutual trust and respect?", "type": "Yes/No"},
