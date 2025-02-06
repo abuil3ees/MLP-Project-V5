@@ -8,6 +8,7 @@ summary = st.sidebar.text_area(
     placeholder="Write your case study or problem statement here..."
 )
 
+# Define behaviors and their 5 questions each (total 40 questions)
 behaviors = {
     "1. We Trust and Respect One Another": [
         {"question": "Do team members demonstrate mutual trust and respect?", "type": "Yes/No"},
@@ -67,8 +68,10 @@ behaviors = {
     ]
 }
 
+# Dictionary to hold responses
 responses = {}
 
+# Display questions and collect responses
 for behavior, questions in behaviors.items():
     st.subheader(behavior)
     for i, q in enumerate(questions):
@@ -78,42 +81,66 @@ for behavior, questions in behaviors.items():
         elif q["type"] == "Scale":
             responses[key] = st.slider(q["question"], min_value=1, max_value=10, key=key, value=5)
 
+# When "Submit" is pressed, compute overall and per-behavior scores
 if st.button("Submit"):
     total_score = 0
-    max_score = len(responses) * 10
-    for value in responses.values():
-        if isinstance(value, str):
-            total_score += 10 if value == "Yes" else 0
-        elif isinstance(value, int):
-            total_score += value
+    max_score_total = len(responses) * 10  # Each question max is 10
+    
+    # Dictionary to store behavior-specific scores
+    behavior_scores = {}
+    
+    # Calculate overall score and per-behavior scores
+    for behavior, questions in behaviors.items():
+        behavior_total = 0
+        for i in range(len(questions)):
+            key = f"{behavior}_{i}"
+            response = responses[key]
+            if isinstance(response, str):
+                behavior_total += 10 if response == "Yes" else 0
+            else:
+                behavior_total += response
+        behavior_percentage = (behavior_total / (len(questions) * 10)) * 100
+        behavior_scores[behavior] = behavior_percentage
+        total_score += behavior_total
 
-    readiness_score = (total_score / max_score) * 100
+    readiness_score = (total_score / max_score_total) * 100
 
+    # Determine overall status and traffic light image
     if readiness_score >= 80:
         status = "Green - Ready to Proceed"
         image_path = "green_light.png"
-        focus_message = (
-            "Your leadership readiness is excellent. Your team demonstrates strong trust, transparent communication, "
-            "and a high capacity for innovation. Continue to reinforce these strengths while maintaining your focus on "
-            "continuous improvement and proactive risk management."
-        )
     elif readiness_score >= 50:
         status = "Yellow - Needs Improvement"
         image_path = "yellow_light.png"
-        focus_message = (
-            "Your team shows moderate readiness. Key areas for improvement include enhancing team trust, ensuring "
-            "clear and consistent communication, and building capabilities in innovation. Consider targeted training, "
-            "regular feedback sessions, and structured team-building activities to bridge these gaps."
-        )
     else:
         status = "Red - Do Not Proceed"
         image_path = "red_light.png"
-        focus_message = (
-            "Your team's readiness is below the desired level. Immediate attention is required to address critical issues, "
-            "such as establishing trust, improving communication, and aligning leadership actions with team expectations. "
-            "Focus on comprehensive interventions, including coaching, mentoring, and possibly external consultancy to drive significant improvements."
-        )
+    
+    # Define tailored recommendations for each behavior
+    behavior_recommendations = {
+        "1. We Trust and Respect One Another": "Consider holding regular team-building sessions and open forums to reinforce mutual trust and respect.",
+        "2. We Are Inclusive and Take Care of Each Other": "Focus on creating inclusive policies and improving support programs to ensure every team member feels valued.",
+        "3. We Listen and Communicate Transparently": "Enhance communication channels by organizing frequent town halls and establishing structured feedback mechanisms.",
+        "4. We Embrace Change and Learn Continuously": "Invest in training and development initiatives and create platforms for sharing lessons learned.",
+        "5. We Strive to Improve and Innovate Courageously": "Encourage innovation by rewarding creative ideas and setting up cross-functional collaboration projects.",
+        "6. We Keep Sustainability Top of Mind in Everything We Do": "Integrate sustainability metrics into your regular reviews and engage teams in green initiatives.",
+        "7. We Create Value for Customers": "Review customer feedback in-depth and adjust strategies to improve customer service and product offerings.",
+        "8. We Drive Performance, Celebrate Successes, and Win Together": "Set clear performance targets, recognize team achievements, and foster a collaborative work culture."
+    }
+    
+    # Identify behaviors that scored low (threshold can be adjusted; here we use 70%)
+    low_behaviors = {behavior: score for behavior, score in behavior_scores.items() if score < 70}
+    
+    # Build dynamic recommendations message
+    recommendations_message = ""
+    if low_behaviors:
+        recommendations_message += "The following areas need attention:\n\n"
+        for behavior, score in low_behaviors.items():
+            recommendations_message += f"**{behavior}**: Score: {score:.1f}%\n- {behavior_recommendations.get(behavior, '')}\n\n"
+    else:
+        recommendations_message = "All key areas are performing well. Continue reinforcing your strengths!"
 
+    # Display results and tailored recommendations in two columns
     with st.expander("View Results", expanded=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -122,4 +149,4 @@ if st.button("Submit"):
             st.markdown(f"### Status: **{status}**")
         with col2:
             st.markdown("### Focus & Recommendations")
-            st.markdown(f"{focus_message}")
+            st.markdown(recommendations_message)
