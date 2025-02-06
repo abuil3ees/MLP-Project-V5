@@ -1,14 +1,5 @@
 import streamlit as st
 
-# This app uses the theme specified in .streamlit/config.toml
-# Ensure that you have created a file at .streamlit/config.toml with the following content:
-#
-# [theme]
-# primaryColor = "#008000"
-# backgroundColor = "#FFFFFF"
-# secondaryBackgroundColor = "#F0F2F6"
-# textColor = "#000000"
-
 st.image("logo.png", width=400)
 st.title("Leadership Readiness Tool")
 
@@ -90,7 +81,6 @@ for behavior, questions in behaviors.items():
 if st.button("Submit"):
     total_score = 0
     max_score = len(responses) * 10
-
     for value in responses.values():
         if isinstance(value, str):
             total_score += 10 if value == "Yes" else 0
@@ -102,14 +92,34 @@ if st.button("Submit"):
     if readiness_score >= 80:
         status = "Green - Ready to Proceed"
         image_path = "green_light.png"
+        focus_message = (
+            "Your leadership readiness is excellent. Your team demonstrates strong trust, transparent communication, "
+            "and a high capacity for innovation. Continue to reinforce these strengths while maintaining your focus on "
+            "continuous improvement and proactive risk management."
+        )
     elif readiness_score >= 50:
         status = "Yellow - Needs Improvement"
         image_path = "yellow_light.png"
+        focus_message = (
+            "Your team shows moderate readiness. Key areas for improvement include enhancing team trust, ensuring "
+            "clear and consistent communication, and building capabilities in innovation. Consider targeted training, "
+            "regular feedback sessions, and structured team-building activities to bridge these gaps."
+        )
     else:
         status = "Red - Do Not Proceed"
         image_path = "red_light.png"
+        focus_message = (
+            "Your team's readiness is below the desired level. Immediate attention is required to address critical issues, "
+            "such as establishing trust, improving communication, and aligning leadership actions with team expectations. "
+            "Focus on comprehensive interventions, including coaching, mentoring, and possibly external consultancy to drive significant improvements."
+        )
 
     with st.expander("View Results", expanded=True):
-        st.image(image_path, width=150)
-        st.markdown(f"### Final Readiness Score: {readiness_score:.2f}%")
-        st.markdown(f"### Status: **{status}**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image(image_path, width=150)
+            st.markdown(f"### Final Readiness Score: {readiness_score:.2f}%")
+            st.markdown(f"### Status: **{status}**")
+        with col2:
+            st.markdown("### Focus & Recommendations")
+            st.markdown(f"{focus_message}")
